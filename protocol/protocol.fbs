@@ -1,0 +1,8 @@
+namespace Gossip;
+
+table Event {
+  origin:  [ubyte];
+  message: [ubyte];
+}
+
+root_type Event;
