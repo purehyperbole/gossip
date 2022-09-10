@@ -3,6 +3,7 @@ package gossip
 import (
 	"fmt"
 	"net"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -24,17 +25,21 @@ func TestNetworkGossip(t *testing.T) {
 	values := make([][]byte, len(nodes))
 	network := make([]*Network, len(nodes))
 
+	var stored int64
+
 	for i := range nodes {
 		x := i
 
 		cfg := &Config{
 			Nodes:         nodeList,
-			Fanout:        13,
+			Fanout:        DefaultFanout,
 			ListenAddress: fmt.Sprintf("127.0.0.1:%d", 10000+i),
 			OnGossip: func(message []byte) {
 				msg := make([]byte, len(message))
 				copy(msg, message)
 				values[x] = msg
+
+				atomic.AddInt64(&stored, 1)
 			},
 		}
 
@@ -47,7 +52,11 @@ func TestNetworkGossip(t *testing.T) {
 	err := network[0].Gossip([]byte("hello!"))
 	require.Nil(t, err)
 
-	time.Sleep(time.Second)
+	for atomic.LoadInt64(&stored) < int64(len(nodes)) {
+		time.Sleep(time.Millisecond)
+	}
+
+	fmt.Println("stored", stored)
 
 	for i := range values {
 		assert.Equal(t, []byte("hello!"), values[i])

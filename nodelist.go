@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"math/rand"
 	"net"
+	"sync"
 )
 
 // NodeList represents a collection of nodes on the network
@@ -15,6 +16,7 @@ type NodeList interface {
 type nodeList struct {
 	rand  *rand.Rand
 	nodes []*net.UDPAddr
+	mu    sync.Mutex
 }
 
 // DefaultNodeList returns a default nodelist implementation
@@ -38,6 +40,9 @@ func (n *nodeList) GetRandom(count int) []*net.UDPAddr {
 	if len(n.nodes) < count {
 		return n.nodes
 	}
+
+	n.mu.Lock()
+	defer n.mu.Unlock()
 
 	for count > 0 {
 		if ns.insert(n.nodes[n.rand.Intn(len(n.nodes))]) {
