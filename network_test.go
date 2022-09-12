@@ -3,6 +3,7 @@ package gossip
 import (
 	"fmt"
 	"net"
+	"os"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -12,7 +13,13 @@ import (
 )
 
 func TestNetworkGossip(t *testing.T) {
-	nodes := make([]*net.UDPAddr, 1000)
+	var nodes []*net.UDPAddr
+
+	if os.Getenv("CI") == "true" {
+		nodes = make([]*net.UDPAddr, 50)
+	} else {
+		nodes = make([]*net.UDPAddr, 1000)
+	}
 
 	for i := range nodes {
 		addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("127.0.0.1:%d", 10000+i))
