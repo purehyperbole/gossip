@@ -101,11 +101,13 @@ func (n *Network) gossip(origin, message []byte) error {
 	b := n.builder.Get().(*flatbuffers.Builder)
 	defer n.builder.Put(b)
 
-	sb := b.CreateByteVector(origin)
+	b.Reset()
+
+	ob := b.CreateByteVector(origin)
 	mb := b.CreateByteVector(message)
 
 	protocol.EventStart(b)
-	protocol.EventAddOrigin(b, sb)
+	protocol.EventAddOrigin(b, ob)
 	protocol.EventAddMessage(b, mb)
 	ev := protocol.EventEnd(b)
 
@@ -123,6 +125,8 @@ func (n *Network) gossip(origin, message []byte) error {
 			if err != nil {
 				return err
 			}
+
+			x = 0
 		}
 
 		n.writeBatch = n.writeBatch[:len(n.writeBatch)+1]
